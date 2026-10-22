@@ -40,4 +40,4 @@ Przykład: `feat(features): add URL length and digit-ratio features`
 - Nie commitujemy danych (`data/`), modeli (`*.joblib`) ani dużych plików CSV.
 - Sekcje raportu IEEE wpisujemy bezpośrednio we wspólnym dokumencie (bez plików pośrednich).
 - Zmiany kontraktów technicznych w README wymagają osobnego Issue i zgody zespołu.
-- Daily/sync: ustalić dzień i godzinę (uzupełnić): ______
+- Synchroniczne spotkania zespołu: czwartki 16:15-17:45 (podczas zajęć projektowych z Zarządzania projektem informatycznym)
