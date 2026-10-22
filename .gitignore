@@ -1,0 +1,26 @@
+# Dane i modele
+data/*
+!data/.gitkeep
+models/*
+!models/.gitkeep
+
+# Pliki CSV i modele wszędzie, z wyjątkiem fixtures testowych
+*.csv
+!tests/fixtures/*.csv
+*.joblib
+*.pkl
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+
+# Środowisko / IDE / system
+.env
+.idea/
+.vscode/
+.DS_Store

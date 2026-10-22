@@ -1,0 +1,10 @@
+# Python >= 3.10
+scikit-learn==1.6.1
+pandas==2.2.3
+numpy==2.2.6
+scipy==1.15.3
+tldextract==5.3.0
+joblib==1.5.1
+matplotlib==3.10.3
+seaborn==0.13.2
+pytest==8.4.1
