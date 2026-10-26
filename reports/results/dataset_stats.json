@@ -1,0 +1,44 @@
+{
+  "raw_records_count": 549346,
+  "cleaned_records_count": 506422,
+  "clean_details": {
+    "removed_nan_or_empty": 0,
+    "removed_conflicting_urls": 2,
+    "removed_conflict_rows": 6,
+    "removed_duplicates": 42918
+  },
+  "splits": [
+    {
+      "name": "train",
+      "total": 354494,
+      "benign": 275010,
+      "phishing": 79484,
+      "benign_ratio": 0.7758,
+      "phishing_ratio": 0.2242,
+      "split_ratio": 0.7
+    },
+    {
+      "name": "val",
+      "total": 75964,
+      "benign": 58931,
+      "phishing": 17033,
+      "benign_ratio": 0.7758,
+      "phishing_ratio": 0.2242,
+      "split_ratio": 0.15
+    },
+    {
+      "name": "test",
+      "total": 75964,
+      "benign": 58931,
+      "phishing": 17033,
+      "benign_ratio": 0.7758,
+      "phishing_ratio": 0.2242,
+      "split_ratio": 0.15
+    }
+  ],
+  "dod_verified": {
+    "min_50k_records": true,
+    "proportions_and_class_distribution": true,
+    "zero_url_overlap": true
+  }
+}
