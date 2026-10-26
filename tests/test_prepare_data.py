@@ -7,7 +7,7 @@ Testy jednostkowe modułu src/prepare_data.py.
 import pandas as pd
 import pytest
 
-from src.prepare_data import clean_data, split_data, verify_dod
+from src.prepare_data import clean_data, load_raw_data, split_data, verify_dod
 
 
 def test_clean_data_removes_nan_and_empty():
@@ -99,3 +99,28 @@ def test_verify_dod_assertions():
 
     with pytest.raises(AssertionError, match="DoD 1 niespełnione"):
         verify_dod(df, train, val, test)
+
+
+def test_load_raw_data_existing_file(tmp_path):
+    csv_path = tmp_path / "raw.csv"
+    csv_path.write_text("url,label\nhttp://test.com,good\nhttp://bad.com,bad\n", encoding="utf-8")
+    df, count = load_raw_data(csv_path)
+    assert count == 2
+    assert list(df.columns) == ["URL", "Label"]
+    assert len(df) == 2
+
+
+def test_load_raw_data_auto_download(tmp_path, monkeypatch):
+    target_path = tmp_path / "subdir" / "data.csv"
+    fake_download_dir = tmp_path / "kaggle_download"
+    fake_download_dir.mkdir()
+    (fake_download_dir / "phishing.csv").write_text(
+        "URL,Label\nhttp://example.com,bad\n", encoding="utf-8"
+    )
+
+    monkeypatch.setattr("kagglehub.dataset_download", lambda handle: str(fake_download_dir))
+
+    df, count = load_raw_data(target_path)
+    assert target_path.exists()
+    assert count == 1
+    assert len(df) == 1
