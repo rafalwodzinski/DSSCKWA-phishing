@@ -3,13 +3,25 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
-from sklearn.pipeline import Pipeline
+import scipy.sparse
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import FeatureUnion, Pipeline
+from sklearn.preprocessing import MaxAbsScaler
 
-from src.extract_features import FEATURE_NAMES, LexicalExtractor
+from src.extract_features import (
+    FEATURE_NAMES,
+    LexicalExtractor,
+    build_feature_pipeline,
+    extract_features,
+    load_feature_pipeline,
+    save_feature_pipeline,
+    verify_dod_features,
+)
 
 
 @pytest.fixture
@@ -176,3 +188,141 @@ def test_edge_cases_handling():
     assert not np.isinf(res).any()
     # Pusty string powinien mieć same zera
     assert np.all(res[0] == 0.0)
+
+
+def test_build_feature_pipeline_structure():
+    """Weryfikacja struktury i parametrów hybrydowego FeatureUnion."""
+    pipeline = build_feature_pipeline(max_features=15000, ngram_range=(3, 5))
+
+    assert isinstance(pipeline, FeatureUnion)
+    transformer_dict = dict(pipeline.transformer_list)
+
+    assert "tfidf" in transformer_dict
+    assert "lexical" in transformer_dict
+
+    tfidf = transformer_dict["tfidf"]
+    assert isinstance(tfidf, TfidfVectorizer)
+    assert tfidf.analyzer == "char"
+    assert tfidf.ngram_range == (3, 5)
+    assert tfidf.max_features == 15000
+    assert tfidf.sublinear_tf is True
+
+    lex_pipe = transformer_dict["lexical"]
+    assert isinstance(lex_pipe, Pipeline)
+    pipe_steps = dict(lex_pipe.steps)
+    assert isinstance(pipe_steps["lexical"], LexicalExtractor)
+    assert isinstance(pipe_steps["scaler"], MaxAbsScaler)
+
+
+def test_hybrid_pipeline_output_format_and_dod(sample_urls: list[str]):
+    """Weryfikacja kryterium DoD 1: macierz rzadka scipy.sparse i brak wartości ujemnych."""
+    pipeline = build_feature_pipeline(max_features=500)
+    X = pipeline.fit_transform(sample_urls)
+
+    # 1. Sprawdzenie rzadkości macierzy
+    assert scipy.sparse.issparse(X), "Wyjście nie jest macierzą scipy.sparse"
+    assert isinstance(X, scipy.sparse.csr_matrix)
+
+    # 2. Liczba próbek i cech
+    assert X.shape[0] == len(sample_urls)
+    # 12 cech leksykalnych + n cech TF-IDF
+    assert X.shape[1] > 12
+
+    # 3. Brak wartości ujemnych (DoD 1)
+    assert X.min() >= 0.0, f"Znaleziono wartości ujemne: {X.min()}"
+    if X.data.size > 0:
+        assert X.data.min() >= 0.0, f"Wartość ujemna w X.data: {X.data.min()}"
+
+    # 4. Typ danych
+    assert X.dtype == np.float64
+
+
+def test_lexical_pipeline_scaler_bounds(sample_urls: list[str]):
+    """Weryfikacja skalowania cech leksykalnych przez MaxAbsScaler do przedziału [0, 1]."""
+    lex_pipe = Pipeline([
+        ("lexical", LexicalExtractor()),
+        ("scaler", MaxAbsScaler()),
+    ])
+
+    scaled = lex_pipe.fit_transform(sample_urls)
+    assert isinstance(scaled, np.ndarray)
+    assert scaled.shape == (len(sample_urls), 12)
+    assert scaled.min() >= 0.0
+    assert scaled.max() <= 1.0
+
+
+def test_fit_only_on_train_no_data_leakage():
+    """Weryfikacja podziału: fit wyłącznie na train, transform na osobnym zbiorze."""
+    fixtures_csv = Path("tests/fixtures/sample_urls.csv")
+    if fixtures_csv.exists():
+        df = pd.read_csv(fixtures_csv)
+    else:
+        df = pd.DataFrame({"URL": [f"https://site{i}.com/path" for i in range(100)]})
+
+    train_urls = df["URL"].iloc[:140]
+    test_urls = df["URL"].iloc[140:]
+
+    pipeline = build_feature_pipeline(max_features=1000)
+    X_train = pipeline.fit_transform(train_urls)
+    X_test = pipeline.transform(test_urls)
+
+    assert scipy.sparse.issparse(X_train)
+    assert scipy.sparse.issparse(X_test)
+    assert X_train.shape[0] == len(train_urls)
+    assert X_test.shape[0] == len(test_urls)
+    assert X_train.shape[1] == X_test.shape[1]
+    assert X_test.min() >= 0.0
+
+
+def test_feature_names_out_composition(sample_urls: list[str]):
+    """Weryfikacja kompletności i prefiksów cech z get_feature_names_out()."""
+    pipeline = build_feature_pipeline(max_features=200)
+    X = pipeline.fit_transform(sample_urls)
+    feature_names = pipeline.get_feature_names_out()
+
+    assert len(feature_names) == X.shape[1]
+    assert any(name.startswith("tfidf__") for name in feature_names)
+    assert any(name.startswith("lexical__") for name in feature_names)
+
+
+def test_pipeline_serialization_and_reloading(tmp_path: Path, sample_urls: list[str]):
+    """Weryfikacja kryterium DoD 2: serializacja do joblib, poprawny odczyt i weryfikacja DoD."""
+    pipeline = build_feature_pipeline(max_features=300)
+    X_train = pipeline.fit_transform(sample_urls)
+
+    save_path = tmp_path / "models" / "feature_pipeline.joblib"
+    save_feature_pipeline(pipeline, save_path)
+    assert save_path.exists()
+
+    # Sprawdzenie funkcji weryfikującej DoD
+    dod_status = verify_dod_features(X_train, save_path)
+    assert dod_status["is_sparse_matrix"] is True
+    assert dod_status["non_negative_values"] is True
+    assert dod_status["pipeline_joblib_valid"] is True
+
+    # Weryfikacja załadowanego pipeline'u
+    loaded_pipe = load_feature_pipeline(save_path)
+    X_loaded = loaded_pipe.transform(sample_urls)
+
+    assert scipy.sparse.issparse(X_loaded)
+    np.testing.assert_allclose(X_train.toarray(), X_loaded.toarray(), rtol=1e-5, atol=1e-5)
+
+
+def test_extract_features_end_to_end(tmp_path: Path):
+    """Weryfikacja pełnego wywołania extract_features na małym zbiorze fixtures."""
+    fixtures_csv = Path("tests/fixtures/sample_urls.csv")
+    out_pipe = tmp_path / "feature_pipeline.joblib"
+
+    pipe, X_tr, X_va, X_te, dod = extract_features(
+        train_path=fixtures_csv,
+        val_path=fixtures_csv,
+        test_path=fixtures_csv,
+        output_pipeline_path=out_pipe,
+        max_features=500,
+    )
+
+    assert scipy.sparse.issparse(X_tr)
+    assert scipy.sparse.issparse(X_va)
+    assert scipy.sparse.issparse(X_te)
+    assert out_pipe.exists()
+    assert all(dod.values())
