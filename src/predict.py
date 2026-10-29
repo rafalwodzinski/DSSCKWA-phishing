@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -44,6 +45,15 @@ import numpy as np
 DEFAULT_MODEL_FILE = Path("models/best_hybrid.joblib")
 DEFAULT_THRESHOLD_FILE = Path("models/threshold.json")
 DEFAULT_UNCERTAINTY_MARGIN = 0.05
+
+_PREFIX_PATTERN = re.compile(r"^(https?://)?(www\.)?", re.IGNORECASE)
+
+
+def normalize_url(url: str) -> str:
+    """Ujednolica URL (usuwa protokół i www), zgodnie z modułem prepare_data."""
+    if not isinstance(url, str):
+        url = str(url) if url is not None else ""
+    return _PREFIX_PATTERN.sub("", url.strip())
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +131,8 @@ def classify_url(
         Słownik z kluczami: url, verdict, score, threshold, uncertainty_margin, latency_ms.
     """
     t_start = time.perf_counter()
-    score = _get_score(model, url, score_method)
+    norm_url = normalize_url(url)
+    score = _get_score(model, norm_url, score_method)
     latency_ms = (time.perf_counter() - t_start) * 1000.0
 
     distance = score - threshold
