@@ -1,4 +1,4 @@
-"""Testy jednostkowe modułu trenowania grupy kontrolnej Baseline (src/train.py)."""
+"""Testy jednostkowe modułu trenowania modeli Baseline i hybrydowych (src/train.py)."""
 
 from __future__ import annotations
 
@@ -8,21 +8,30 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import ComplementNB, MultinomialNB
 from sklearn.pipeline import FeatureUnion, Pipeline
+from sklearn.svm import LinearSVC
 
 from src.extract_features import LexicalExtractor
 from src.train import (
     BASELINE_ALPHA,
     BASELINE_MAX_FEATURES,
     BASELINE_TOKEN_PATTERN,
+    CNB_ALPHA,
+    SVM_C,
     build_baseline_pipeline,
+    build_cnb_pipeline,
+    build_svm_pipeline,
     load_model,
+    run_stratified_cv,
     save_model,
     train_baseline,
+    train_hybrid,
     train_model,
     verify_dod_baseline,
+    verify_dod_hybrid,
 )
 
 
@@ -155,3 +164,116 @@ def test_train_model_dispatcher_invalid_name():
     with pytest.raises(ValueError, match="Nieobsługiwany typ modelu"):
         train_model(model_type="unknown_model")
 
+
+def test_build_hybrid_cnb_and_svm_pipelines():
+    """Weryfikuje strukturę hybrydowych potoków ComplementNB oraz LinearSVC (w tym CalibratedClassifierCV)."""
+    cnb_pipe = build_cnb_pipeline(max_features=1000)
+    assert isinstance(cnb_pipe, Pipeline)
+    assert isinstance(cnb_pipe.named_steps["features"], FeatureUnion)
+    assert isinstance(cnb_pipe.named_steps["classifier"], ComplementNB)
+    assert cnb_pipe.named_steps["classifier"].alpha == CNB_ALPHA
+
+    svm_pipe = build_svm_pipeline(max_features=1000, calibrated=False)
+    assert isinstance(svm_pipe, Pipeline)
+    assert isinstance(svm_pipe.named_steps["features"], FeatureUnion)
+    assert isinstance(svm_pipe.named_steps["classifier"], LinearSVC)
+    assert svm_pipe.named_steps["classifier"].C == SVM_C
+
+    cal_svm_pipe = build_svm_pipeline(max_features=1000, calibrated=True)
+    assert isinstance(cal_svm_pipe.named_steps["classifier"], CalibratedClassifierCV)
+
+
+def test_run_stratified_cv_no_leakage_and_stats():
+    """Weryfikuje działanie 5-fold StratifiedKFold wewnątrz Pipeline dla cnb i svm."""
+    fixtures_csv = Path("tests/fixtures/sample_urls.csv")
+    df = pd.read_csv(fixtures_csv)
+    urls = df["URL"].astype(str)
+    labels = df["Label"].astype(int)
+
+    for model_key in ["cnb", "svm"]:
+        cv_res = run_stratified_cv(
+            urls=urls,
+            labels=labels,
+            model_key=model_key,
+            n_splits=5,
+            max_features=300,
+            parallel=False,
+        )
+        assert cv_res["model"] == model_key
+        assert cv_res["n_splits"] == 5
+        assert len(cv_res["folds"]) == 5
+        assert 0.0 <= cv_res["f1_mean"] <= 1.0
+        assert cv_res["f1_std"] >= 0.0
+        assert 0.0 <= cv_res["fpr_mean"] <= 1.0
+        assert 0.0 <= cv_res["roc_auc_mean"] <= 1.0
+        assert cv_res["fold_fit_time_mean_sec"] > 0.0
+        assert cv_res["cv_wall_time_sec"] < 90.0
+
+
+def test_train_hybrid_cnb_and_svm_comparison_table(tmp_path: Path):
+    """Weryfikuje pełny trening cnb i svm oraz generowanie tabeli porównawczej w cv_comparison.json."""
+    fixtures_csv = Path("tests/fixtures/sample_urls.csv")
+    df = pd.read_csv(fixtures_csv)
+
+    train_df = df.iloc[:150].reset_index(drop=True)
+    val_df = df.iloc[150:].reset_index(drop=True)
+
+    train_csv = tmp_path / "train.csv"
+    val_csv = tmp_path / "val.csv"
+    train_df.to_csv(train_csv, index=False)
+    val_df.to_csv(val_csv, index=False)
+
+    results_dir = tmp_path / "reports" / "results"
+    cnb_out = tmp_path / "models" / "hybrid_cnb.joblib"
+    svm_out = tmp_path / "models" / "hybrid_svm.joblib"
+
+    _, cnb_val_metrics, cnb_dod = train_hybrid(
+        model_key="cnb",
+        train_path=train_csv,
+        val_path=val_csv,
+        model_output_path=cnb_out,
+        results_dir=results_dir,
+        max_features=300,
+    )
+    assert cnb_out.exists()
+    assert all(cnb_dod.values())
+    assert "f1" in cnb_val_metrics
+
+    _, svm_val_metrics, svm_dod = train_hybrid(
+        model_key="svm",
+        train_path=train_csv,
+        val_path=val_csv,
+        model_output_path=svm_out,
+        results_dir=results_dir,
+        max_features=300,
+    )
+    assert svm_out.exists()
+    assert all(svm_dod.values())
+    assert "f1" in svm_val_metrics
+
+    cv_json_path = results_dir / "cv_comparison.json"
+    assert cv_json_path.exists()
+
+    with open(cv_json_path, encoding="utf-8") as f:
+        cv_data = json.load(f)
+
+    # Tabela porównawcza musi zawierać wszystkie 3 modele: baseline, cnb, svm
+    assert {"baseline", "cnb", "svm"}.issubset(cv_data["models"].keys())
+    table_keys = [row["model_key"] for row in cv_data["comparison_table"]]
+    assert table_keys == ["baseline", "cnb", "svm"]
+
+
+def test_verify_dod_hybrid_rejects_slow_training(tmp_path: Path):
+    """Sprawdza asercję DoD 1 dla przekroczenia limitu 90 sekund na CPU."""
+    dummy_json = tmp_path / "cv_comparison.json"
+    dummy_json.write_text(
+        json.dumps({"models": {"cnb": {}}, "comparison_table": [{"model_key": "cnb"}]}),
+        encoding="utf-8",
+    )
+    with pytest.raises(AssertionError, match="DoD 1 niespełnione"):
+        verify_dod_hybrid(
+            train_time_sec=95.0,
+            cv_wall_time_sec=30.0,
+            cv_comparison_path=dummy_json,
+            model_key="cnb",
+        )
