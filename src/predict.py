@@ -33,6 +33,11 @@ import time
 from pathlib import Path
 from typing import Any
 
+# Upewnij się, że katalog główny projektu jest w sys.path (dla unpicklingu klas z modułu src)
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
 import joblib
 import numpy as np
 
@@ -312,3 +317,4 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

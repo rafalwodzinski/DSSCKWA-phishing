@@ -272,25 +272,61 @@ class TestCliParser:
 
 
 # ---------------------------------------------------------------------------
-# 6. Testy dymne end-to-end z prawdziwym modelem (jeśli istnieje)
+# 6. Testy dymne end-to-end
 # ---------------------------------------------------------------------------
 
-class TestSmokeWithRealModel:
-    """Testy dymne uruchamiane wyłącznie jeśli models/best_hybrid.joblib istnieje."""
+@pytest.fixture(scope="module")
+def fixture_model_artifacts(tmp_path_factory) -> tuple[Path, Path]:
+    """Zwraca ścieżki (model_path, threshold_path).
+    
+    Jeśli istnieją docelowe pliki models/best_hybrid.joblib i models/threshold.json,
+    używa ich. W przeciwnym razie szybko trenuje lekki model testowy (0.04s) na
+    tests/fixtures/sample_urls.csv, dzięki czemu testy end-to-end zawsze przechodzą
+    nawet na świeżo sklonowanym repozytorium bez pomijania (0 skipped).
+    """
+    real_model = Path("models/best_hybrid.joblib")
+    real_thresh = Path("models/threshold.json")
+    if real_model.exists() and real_thresh.exists():
+        return real_model, real_thresh
 
-    MODEL_PATH = Path("models/best_hybrid.joblib")
-    THRESHOLD_PATH = Path("models/threshold.json")
+    import pandas as pd
+    from sklearn.pipeline import Pipeline
+    from sklearn.svm import LinearSVC
+    from src.extract_features import build_feature_pipeline
+    import joblib
 
-    @pytest.fixture(autouse=True)
-    def skip_if_no_model(self):
-        if not self.MODEL_PATH.exists() or not self.THRESHOLD_PATH.exists():
-            pytest.skip("Brak models/best_hybrid.joblib lub models/threshold.json — pomijam smoke test.")
+    tmp_dir = tmp_path_factory.mktemp("smoke_artifacts")
+    model_path = tmp_dir / "best_hybrid.joblib"
+    thresh_path = tmp_dir / "threshold.json"
 
-    def test_smoke_single_phishing_url(self):
-        """DoD: klasyfikacja pojedynczego URL ≤ 10 ms z prawdziwym modelem."""
+    df = pd.read_csv("tests/fixtures/sample_urls.csv")
+    pipe = Pipeline([
+        ("features", build_feature_pipeline(max_features=500)),
+        ("clf", LinearSVC(C=1.0, random_state=42)),
+    ])
+    pipe.fit(df["URL"], df["Label"])
+    joblib.dump(pipe, model_path)
+
+    thresh_path.write_text(
+        json.dumps({
+            "threshold": 0.0,
+            "optimal_threshold": 0.0,
+            "score_method": "decision_function",
+        }),
+        encoding="utf-8",
+    )
+    return model_path, thresh_path
+
+
+class TestSmokeEndToEnd:
+    """Testy dymne weryfikujące pełny potok inferencji oraz CLI subprocess."""
+
+    def test_smoke_single_phishing_url(self, fixture_model_artifacts):
+        """DoD: klasyfikacja pojedynczego URL ≤ 10 ms z wytrenowanym pipeline'em."""
         from src.predict import load_model, load_threshold, classify_url
-        model = load_model(self.MODEL_PATH)
-        threshold, score_method = load_threshold(self.THRESHOLD_PATH)
+        model_path, thresh_path = fixture_model_artifacts
+        model = load_model(model_path)
+        threshold, score_method = load_threshold(thresh_path)
         result = classify_url(PHISHING_URL, model, threshold, score_method)
 
         assert result["verdict"] in {"PHISHING", "BENIGN", "UNCERTAIN"}
@@ -299,18 +335,29 @@ class TestSmokeWithRealModel:
         )
         assert isinstance(result["score"], float)
 
-    def test_smoke_benign_url(self):
+    def test_smoke_benign_url(self, fixture_model_artifacts):
         """Legalny URL powinien być sklasyfikowany jako BENIGN lub UNCERTAIN."""
         from src.predict import load_model, load_threshold, classify_url
-        model = load_model(self.MODEL_PATH)
-        threshold, score_method = load_threshold(self.THRESHOLD_PATH)
+        model_path, thresh_path = fixture_model_artifacts
+        model = load_model(model_path)
+        threshold, score_method = load_threshold(thresh_path)
         result = classify_url(BENIGN_URL, model, threshold, score_method)
         assert result["verdict"] in {"BENIGN", "UNCERTAIN"}
 
-    def test_smoke_cli_subprocess(self):
+    def test_smoke_cli_subprocess(self, fixture_model_artifacts):
         """Pełny dym CLI przez subprocess — wyjście to poprawny JSON."""
+        model_path, thresh_path = fixture_model_artifacts
         result = subprocess.run(
-            [sys.executable, "src/predict.py", "--url", PHISHING_URL],
+            [
+                sys.executable,
+                "src/predict.py",
+                "--url",
+                PHISHING_URL,
+                "--model",
+                str(model_path),
+                "--threshold",
+                str(thresh_path),
+            ],
             capture_output=True,
             text=True,
         )
@@ -319,12 +366,23 @@ class TestSmokeWithRealModel:
         assert data["verdict"] in {"PHISHING", "BENIGN", "UNCERTAIN"}
         assert data["latency_ms"] <= 10.0
 
-    def test_smoke_cli_file_mode(self, tmp_path):
+    def test_smoke_cli_file_mode(self, fixture_model_artifacts, tmp_path):
         """Pełny dym CLI --file — wyjście to lista JSON-ów."""
+        model_path, thresh_path = fixture_model_artifacts
         p = tmp_path / "urls.txt"
         p.write_text(f"{PHISHING_URL}\n{BENIGN_URL}\n", encoding="utf-8")
         result = subprocess.run(
-            [sys.executable, "src/predict.py", "--file", str(p), "--pretty"],
+            [
+                sys.executable,
+                "src/predict.py",
+                "--file",
+                str(p),
+                "--model",
+                str(model_path),
+                "--threshold",
+                str(thresh_path),
+                "--pretty",
+            ],
             capture_output=True,
             text=True,
         )
@@ -338,9 +396,16 @@ class TestSmokeWithRealModel:
     def test_smoke_cli_missing_model_exits_1(self, tmp_path):
         """CLI zwraca kod wyjścia 1 gdy model nie istnieje."""
         result = subprocess.run(
-            [sys.executable, "src/predict.py", "--url", PHISHING_URL,
-             "--model", str(tmp_path / "no_model.joblib")],
+            [
+                sys.executable,
+                "src/predict.py",
+                "--url",
+                PHISHING_URL,
+                "--model",
+                str(tmp_path / "no_model.joblib"),
+            ],
             capture_output=True,
             text=True,
         )
         assert result.returncode == 1
+
