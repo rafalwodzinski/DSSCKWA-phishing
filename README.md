@@ -49,9 +49,21 @@ pytest tests/test_<nazwa>.py   # pojedynczy plik
 
 Testy korzystają z małego zbioru `tests/fixtures/sample_urls.csv`, więc nie wymagają pobierania danych.
 
-### 5. Uruchomienie programu
+### 5. Trenowanie modeli i ewaluacja końcowa
 
-> 🚧 Do uzupełnienia, gdy program będzie gotowy. Tu pojawią się: pobranie danych do `data/`, trenowanie modeli (zapis do `models/`), predykcja dla pojedynczego URL i generowanie wyników do `reports/`.
+Po przygotowaniu zbiorów `data/processed/train.csv`, `val.csv` i `test.csv`:
+
+```bash
+python -m src.train --model baseline
+python -m src.optimize_threshold
+python -m src.final_eval
+```
+
+Finalna ewaluacja korzysta z zapisanych modeli `models/baseline_mnb.joblib` i
+`models/best_hybrid.joblib` oraz progu `models/threshold.json` wyznaczonego na
+zbiorze walidacyjnym. Nie stroi modelu ani progu na `test.csv`. Wyniki i pomiary
+wydajności zapisuje do `reports/results/final_test_metrics.json`, a finalne
+wykresy do `reports/figures/`.
 
 ### Google Colab
 
