@@ -411,7 +411,7 @@ def evaluate_model_recall_by_round(
     dataset: pd.DataFrame,
     predictions: dict[str, Any],
     round_order: list[str] | None = None,
-    threshold: float = 0.5,
+    threshold: float | dict[str, float] = 0.5,
 ) -> pd.DataFrame:
     """Ewaluuje Recall dla modelu na rundach 0–5 obfuskacji URL.
 
@@ -419,10 +419,10 @@ def evaluate_model_recall_by_round(
         dataset: DataFrame z kolumnami URL, Label, Technique, Original_URL.
         predictions: Słownik model_name -> obiekt modelu lub callable zwracający oceny.
         round_order: Kolejność rund (np. ['round_0', 'url_encoding'] lub ['Runda 0', 'Runda 2']).
-        threshold: Próg decyzyjny dla predykcji binarnej (0/1).
+        threshold: Próg decyzyjny (pojedynczy float lub słownik model_name -> float).
 
     Returns:
-        DataFrame z kolumnami: Model, Round, Technique, Recall, Delta_Recall_pp.
+        DataFrame z kolumnami: Model, Round, Technique, Recall, Delta_Recall_pp, Baseline_Recall.
     """
     if "URL" not in dataset.columns or "Label" not in dataset.columns:
         raise ValueError("Dataset musi zawierać kolumny 'URL' i 'Label'.")
@@ -455,7 +455,28 @@ def evaluate_model_recall_by_round(
             )
         return str(round_label), None
 
+    def _resolve_model_threshold(model_name: str, model_obj: Any) -> float:
+        if isinstance(threshold, dict):
+            if model_name in threshold:
+                return float(threshold[model_name])
+            for k, v in threshold.items():
+                if k.lower() == model_name.lower():
+                    return float(v)
+            return 0.5
+        # Jeśli przekazano ujemny próg (np. z decision_function SVM), a model zwraca
+        # wyłącznie prawdopodobieństwa predict_proba w [0, 1] (np. MultinomialNB),
+        # używamy natywnego progu prawdopodobieństwa 0.5.
+        if (
+            float(threshold) < 0.0
+            and not callable(model_obj)
+            and not hasattr(model_obj, "decision_function")
+            and hasattr(model_obj, "predict_proba")
+        ):
+            return 0.5
+        return float(threshold)
+
     for model_name, model in predictions.items():
+        model_threshold = _resolve_model_threshold(model_name, model)
         baseline_recall = None
         for round_label in ordered_rounds:
             round_name, technique_name = resolve_round_reference(round_label)
@@ -482,7 +503,7 @@ def evaluate_model_recall_by_round(
             if not urls:
                 recall_value = 0.0
             else:
-                predictions_array = _as_binary_predictions(model, urls, threshold)
+                predictions_array = _as_binary_predictions(model, urls, model_threshold)
                 recall_value = float(recall_score(labels, predictions_array, zero_division=0.0))
 
             if baseline_recall is None:
@@ -518,7 +539,7 @@ def export_red_team_results(
     model_predictions: dict[str, Any],
     csv_path: str | Path = DEFAULT_EVAL_RESULTS_FILE,
     figure_path: str | Path = DEFAULT_EVAL_FIGURE_FILE,
-    threshold: float = 0.5,
+    threshold: float | dict[str, float] = 0.5,
 ) -> pd.DataFrame:
     """Eksportuje wynik ewaluacji red-team do CSV i rysuje wykres spadku Recall."""
     result = evaluate_model_recall_by_round(
@@ -582,7 +603,7 @@ def evaluate_red_team_models(
         raise FileNotFoundError(f"Nie znaleziono modelu hybrydowego: {hybrid_model_path}")
 
     with open(threshold_path, encoding="utf-8") as file:
-        threshold = float(json.load(file)["threshold"])
+        hybrid_threshold = float(json.load(file)["threshold"])
 
     baseline_model = joblib.load(Path(baseline_model_path))
     hybrid_model = joblib.load(Path(hybrid_model_path))
@@ -594,7 +615,7 @@ def evaluate_red_team_models(
         },
         csv_path=results_path,
         figure_path=figure_path,
-        threshold=threshold,
+        threshold={"Baseline": 0.5, "Hybrid": hybrid_threshold},
     )
 
 
