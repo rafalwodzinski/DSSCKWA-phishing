@@ -1,0 +1,153 @@
+{
+  "evaluation": "final_test",
+  "evaluated_at_utc": "2026-11-05T16:12:48.293223+00:00",
+  "dataset": "data/processed/test.csv",
+  "sample_count": 75964,
+  "thresholds": {
+    "Baseline": 0.5,
+    "Best Hybrid": -0.088141
+  },
+  "models": {
+    "Baseline": {
+      "f1": 0.8915765945068741,
+      "precision": 0.9317163701523102,
+      "recall": 0.8547525391886338,
+      "fpr": 0.01810592048327705,
+      "fnr": 0.14524746081136616,
+      "roc_auc": 0.9840367678897047
+    },
+    "Best Hybrid": {
+      "f1": 0.946633947313958,
+      "precision": 0.9534842167957117,
+      "recall": 0.9398814066811484,
+      "fpr": 0.013252787157862584,
+      "fnr": 0.06011859331885164,
+      "roc_auc": 0.9943765192118288
+    }
+  },
+  "acceptance_criteria": {
+    "minimum_f1": 0.92,
+    "maximum_fpr": 0.02,
+    "minimum_roc_auc": 0.95,
+    "by_model": {
+      "Baseline": {
+        "f1": false,
+        "fpr": true,
+        "roc_auc": true,
+        "passed": false
+      },
+      "Best Hybrid": {
+        "f1": true,
+        "fpr": true,
+        "roc_auc": true,
+        "passed": true
+      }
+    },
+    "best_hybrid_passed": true,
+    "performance": {
+      "inference_by_model": {
+        "Baseline": true,
+        "Best Hybrid": true
+      },
+      "training_best_hybrid": true,
+      "best_hybrid_passed": true
+    }
+  },
+  "benchmarks": {
+    "inference": {
+      "Baseline": {
+        "sample_count": 1000,
+        "mean_ms_per_url": 0.1538532851554919,
+        "p95_ms_per_url": 0.16950208228081465,
+        "limit_ms_per_url": 10.0,
+        "mean_passed": true,
+        "p95_passed": true,
+        "passed": true
+      },
+      "Best Hybrid": {
+        "sample_count": 1000,
+        "mean_ms_per_url": 0.4724894138635136,
+        "p95_ms_per_url": 0.5374187676352449,
+        "limit_ms_per_url": 10.0,
+        "mean_passed": true,
+        "p95_passed": true,
+        "passed": true
+      }
+    },
+    "training": {
+      "model": "Best Hybrid",
+      "dataset": "data/processed/train.csv",
+      "sample_count": 354494,
+      "time_seconds": 29.566015832999256,
+      "limit_seconds": 90.0,
+      "passed": true
+    }
+  },
+  "feature_importance_top_15": [
+    {
+      "feature": "lexical__host_length",
+      "importance": 9.117879847995367
+    },
+    {
+      "feature": "tfidf__.com/",
+      "importance": 7.479541863215382
+    },
+    {
+      "feature": "tfidf__com/",
+      "importance": 6.9301520858547185
+    },
+    {
+      "feature": "tfidf__om/",
+      "importance": 6.692519856212714
+    },
+    {
+      "feature": "lexical__path_length",
+      "importance": 6.6323075262957785
+    },
+    {
+      "feature": "lexical__num_subdomains",
+      "importance": 6.370125005844999
+    },
+    {
+      "feature": "lexical__url_length",
+      "importance": 5.800692742824592
+    },
+    {
+      "feature": "tfidf__htm",
+      "importance": 5.003738950138994
+    },
+    {
+      "feature": "tfidf__.exe",
+      "importance": 4.473551069844698
+    },
+    {
+      "feature": "tfidf__.cfm",
+      "importance": 4.28382964392087
+    },
+    {
+      "feature": "tfidf__2015",
+      "importance": 3.7863003022366204
+    },
+    {
+      "feature": "tfidf__.tk",
+      "importance": 3.652106763079612
+    },
+    {
+      "feature": "tfidf__/gd",
+      "importance": 3.636205025770367
+    },
+    {
+      "feature": "tfidf__apk",
+      "importance": 3.518324480595281
+    },
+    {
+      "feature": "tfidf__200",
+      "importance": 3.4898599539794164
+    }
+  ],
+  "figures": {
+    "confusion_matrices": "reports/figures/confusion_matrices.png",
+    "roc_curves": "reports/figures/roc_curves.png",
+    "feature_importance": "reports/figures/feature_importance.png"
+  }
+}
