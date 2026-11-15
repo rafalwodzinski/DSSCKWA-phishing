@@ -26,6 +26,18 @@ from sklearn.metrics import (
     roc_curve,
 )
 
+# Globalna konfiguracja czytelności wykresów pod rzutnik i skład IEEE (300 DPI)
+plt.rcParams.update({
+    "font.size": 14,
+    "axes.titlesize": 16,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 14,
+    "axes.labelweight": "bold",
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "legend.fontsize": 12,
+})
+
 
 def _extract_1d_scores(
     y_score: np.ndarray | pd.Series | list[float] | list[int],
@@ -152,7 +164,7 @@ def plot_confusion_matrix(
 
     cm = confusion_matrix(targets, y_pred, labels=[0, 1], normalize=normalize)
 
-    fig, ax = plt.subplots(figsize=(6, 5))
+    fig, ax = plt.subplots(figsize=(6.8, 5.6))
     fmt = ".2%" if normalize is not None else "d"
 
     sns.heatmap(
@@ -161,13 +173,16 @@ def plot_confusion_matrix(
         fmt=fmt,
         cmap="Blues",
         cbar=False,
+        annot_kws={"size": 15, "weight": "bold"},
+        linewidths=1.5,
+        linecolor="white",
         xticklabels=["Legalny (0)", "Phishing (1)"],
         yticklabels=["Legalny (0)", "Phishing (1)"],
         ax=ax,
     )
-    ax.set_title(f"Macierz pomyłek – {model_name}", fontsize=12, pad=12)
-    ax.set_xlabel("Predykcja", fontsize=10)
-    ax.set_ylabel("Rzeczywistość", fontsize=10)
+    ax.set_title(f"Macierz pomyłek – {model_name}", fontsize=16, fontweight="bold", pad=14)
+    ax.set_xlabel("Predykcja", fontsize=14, fontweight="bold")
+    ax.set_ylabel("Rzeczywistość", fontsize=14, fontweight="bold")
 
     if save_path is None:
         save_path = Path("reports/figures") / f"confusion_matrix_{model_name}.png"
@@ -212,9 +227,9 @@ def plot_roc_curve(
         auc_score = float("nan")
         label_text = f"{model_name} (ROC-AUC = N/A)"
 
-    fig, ax = plt.subplots(figsize=(6, 5))
-    ax.plot(fpr_arr, tpr_arr, color="#1f77b4", lw=2, label=label_text)
-    ax.plot([0, 1], [0, 1], color="gray", linestyle="--", lw=1.5, label="Losowy (AUC = 0.5000)")
+    fig, ax = plt.subplots(figsize=(7.0, 5.8))
+    ax.plot(fpr_arr, tpr_arr, color="#1f77b4", lw=3.0, label=label_text)
+    ax.plot([0, 1], [0, 1], color="gray", linestyle="--", lw=2.0, label="Losowy (AUC = 0.5000)")
 
     # Oznaczenie punktu roboczego dla zadanego progu
     if threshold is not None and len(thresholds) > 0:
@@ -225,18 +240,20 @@ def plot_roc_curve(
             [thresh_fpr],
             [thresh_tpr],
             color="#d62728",
-            s=60,
+            s=110,
+            edgecolors="black",
+            linewidths=1.2,
             zorder=5,
             label=f"Próg {threshold:.2f} (FPR={thresh_fpr:.3f}, Recall={thresh_tpr:.3f})",
         )
 
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.05])
-    ax.set_xlabel("False Positive Rate (FPR)", fontsize=10)
-    ax.set_ylabel("True Positive Rate (Recall / TPR)", fontsize=10)
-    ax.set_title(f"Krzywa ROC – {model_name}", fontsize=12, pad=12)
-    ax.legend(loc="lower right", fontsize=9)
-    ax.grid(alpha=0.3)
+    ax.set_xlabel("False Positive Rate (FPR)", fontsize=14, fontweight="bold")
+    ax.set_ylabel("True Positive Rate (Recall / TPR)", fontsize=14, fontweight="bold")
+    ax.set_title(f"Krzywa ROC – {model_name}", fontsize=16, fontweight="bold", pad=14)
+    ax.legend(loc="lower right", fontsize=12, frameon=True, framealpha=0.95)
+    ax.grid(alpha=0.4, linewidth=1.0)
 
     if save_path is None:
         save_path = Path("reports/figures") / f"roc_curve_{model_name}.png"

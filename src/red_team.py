@@ -31,6 +31,17 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import recall_score
 
+plt.rcParams.update({
+    "font.size": 14,
+    "axes.titlesize": 16,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 14,
+    "axes.labelweight": "bold",
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "legend.fontsize": 12,
+})
+
 DEFAULT_INPUT_FILE = Path("data/processed/test.csv")
 DEFAULT_OUTPUT_FILE = Path("data/adversarial/adversarial.csv")
 DEFAULT_EVAL_RESULTS_FILE = Path("reports/results/red_team_eval.csv")
@@ -556,27 +567,48 @@ def export_red_team_results(
     fig_target = Path(figure_path)
     fig_target.parent.mkdir(parents=True, exist_ok=True)
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(11.5, 6.5))
     models = sorted(result["Model"].unique())
     x_positions = np.arange(len(ROUND_ORDER))
-    bar_width = 0.8 / max(len(models), 1)
+    bar_width = 0.76 / max(len(models), 1)
+    colors = {"Baseline": "#2b5c8f", "Hybrid": "#d95f02"}
 
     for index, model_name in enumerate(models):
         model_rows = result[result["Model"] == model_name].set_index("Round").loc[ROUND_ORDER]
-        ax.bar(
-            x_positions + (index - (len(models) - 1) / 2) * bar_width,
-            model_rows["Delta_Recall_pp"].to_numpy(),
+        deltas = model_rows["Delta_Recall_pp"].to_numpy()
+        offsets = x_positions + (index - (len(models) - 1) / 2) * bar_width
+        bars = ax.bar(
+            offsets,
+            deltas,
             width=bar_width,
             label=model_name,
+            color=colors.get(model_name, None),
+            edgecolor="black",
+            linewidth=1.3,
         )
+        for bar, val in zip(bars, deltas):
+            y_pos = val + (0.6 if val >= 0 else -1.5)
+            ax.text(
+                bar.get_x() + bar.get_width() / 2.0,
+                y_pos,
+                f"{val:+.2f}",
+                ha="center",
+                va="bottom" if val >= 0 else "top",
+                fontsize=11,
+                fontweight="bold",
+            )
 
-    ax.set_title("Spadek Recall w rundach obfuskacji URL")
-    ax.set_xlabel("Runda")
-    ax.set_ylabel("Δ Recall (p.p.)")
+    ax.axhline(0.0, color="black", linewidth=1.4)
+    ax.set_title("Spadek Recall w rundach obfuskacji URL", fontsize=16, fontweight="bold", pad=14)
+    ax.set_xlabel("Runda", fontsize=14, fontweight="bold")
+    ax.set_ylabel("Δ Recall (p.p.)", fontsize=14, fontweight="bold")
     ax.set_xticks(x_positions)
-    ax.set_xticklabels(ROUND_ORDER, rotation=0)
-    ax.grid(axis="y", linestyle="--", alpha=0.4)
-    ax.legend()
+    ax.set_xticklabels(ROUND_ORDER, rotation=0, fontsize=12, fontweight="bold")
+    min_delta = float(result["Delta_Recall_pp"].min()) if not result.empty else -10.0
+    max_delta = float(result["Delta_Recall_pp"].max()) if not result.empty else 10.0
+    ax.set_ylim(min(min_delta - 4.0, -20.0), max(max_delta + 4.0, 10.0))
+    ax.grid(axis="y", linestyle="--", alpha=0.5, linewidth=1.0)
+    ax.legend(loc="upper right", fontsize=12, frameon=True, framealpha=0.95)
     fig.tight_layout()
     fig.savefig(fig_target, dpi=300, bbox_inches="tight")
     plt.close(fig)

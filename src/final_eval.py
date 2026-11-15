@@ -18,6 +18,17 @@ from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve
 from src.evaluate import compute_metrics
 from src.train import BASELINE_MODEL_FILE, DEFAULT_TRAIN_FILE, load_model
 
+plt.rcParams.update({
+    "font.size": 14,
+    "axes.titlesize": 16,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 14,
+    "axes.labelweight": "bold",
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "legend.fontsize": 12,
+})
+
 DEFAULT_TEST_FILE = Path("data/processed/test.csv")
 DEFAULT_BEST_HYBRID_MODEL_FILE = Path("models/best_hybrid.joblib")
 DEFAULT_THRESHOLD_FILE = Path("models/threshold.json")
@@ -144,23 +155,34 @@ def _plot_confusion_matrices(
     predictions: dict[str, np.ndarray],
     path: Path,
 ) -> None:
-    fig, axes = plt.subplots(1, len(predictions), figsize=(10, 4))
+    fig, axes = plt.subplots(1, len(predictions), figsize=(12, 5.2))
     for axis, (name, predicted) in zip(np.atleast_1d(axes), predictions.items()):
         matrix = confusion_matrix(targets, predicted, labels=[0, 1])
         image = axis.imshow(matrix, interpolation="nearest", cmap="Blues")
-        axis.figure.colorbar(image, ax=axis)
+        axis.figure.colorbar(image, ax=axis, shrink=0.85)
         axis.set(
             xticks=[0, 1],
             yticks=[0, 1],
             xticklabels=["Legalny (0)", "Phishing (1)"],
             yticklabels=["Legalny (0)", "Phishing (1)"],
-            title=name,
-            xlabel="Predykcja",
-            ylabel="Rzeczywistość",
         )
+        axis.set_title(name, fontsize=16, fontweight="bold", pad=12)
+        axis.set_xlabel("Predykcja", fontsize=14, fontweight="bold")
+        axis.set_ylabel("Rzeczywistość", fontsize=14, fontweight="bold")
+        thresh_color = matrix.max() / 2.0
         for row in range(2):
             for column in range(2):
-                axis.text(column, row, str(matrix[row, column]), ha="center", va="center")
+                val = matrix[row, column]
+                axis.text(
+                    column,
+                    row,
+                    f"{val:,}",
+                    ha="center",
+                    va="center",
+                    fontsize=14,
+                    fontweight="bold",
+                    color="white" if val > thresh_color else "black",
+                )
 
     fig.tight_layout()
     fig.savefig(path, dpi=300, bbox_inches="tight")
@@ -173,29 +195,44 @@ def _plot_roc_curves(
     thresholds: dict[str, float],
     path: Path,
 ) -> None:
-    fig, axis = plt.subplots(figsize=(7, 6))
+    fig, axis = plt.subplots(figsize=(8.2, 6.5))
+    colors = {"Baseline": "#2b5c8f", "Best Hybrid": "#d95f02"}
     for name, values in scores.items():
         false_positive_rate, true_positive_rate, _ = roc_curve(targets, values)
         auc = roc_auc_score(targets, values)
-        axis.plot(false_positive_rate, true_positive_rate, label=f"{name} (AUC = {auc:.4f})")
+        color = colors.get(name, None)
+        axis.plot(
+            false_positive_rate,
+            true_positive_rate,
+            lw=3.0,
+            color=color,
+            label=f"{name} (AUC = {auc:.4f})",
+        )
 
         threshold = thresholds[name]
         predicted = values >= threshold
         tn, fp, fn, tp = confusion_matrix(targets, predicted, labels=[0, 1]).ravel()
         fpr = fp / (fp + tn) if fp + tn else 0.0
         tpr = tp / (tp + fn) if tp + fn else 0.0
-        axis.scatter([fpr], [tpr], s=40, label=f"{name}, próg = {threshold:.4g}")
+        axis.scatter(
+            [fpr],
+            [tpr],
+            s=110,
+            color=color,
+            edgecolors="black",
+            linewidths=1.3,
+            zorder=5,
+            label=f"{name}, próg = {threshold:.4g} (FPR={fpr:.3f}, TPR={tpr:.3f})",
+        )
 
-    axis.plot([0, 1], [0, 1], linestyle="--", color="gray")
-    axis.set(
-        xlim=(0, 1),
-        ylim=(0, 1.05),
-        xlabel="False Positive Rate",
-        ylabel="True Positive Rate",
-        title="Krzywe ROC — zbiór testowy",
-    )
-    axis.grid(alpha=0.3)
-    axis.legend(loc="lower right")
+    axis.plot([0, 1], [0, 1], linestyle="--", lw=2.0, color="gray", label="Losowy (AUC = 0.5000)")
+    axis.set_xlim(0, 1)
+    axis.set_ylim(0, 1.05)
+    axis.set_xlabel("False Positive Rate (FPR)", fontsize=14, fontweight="bold")
+    axis.set_ylabel("True Positive Rate (Recall / TPR)", fontsize=14, fontweight="bold")
+    axis.set_title("Krzywe ROC — zbiór testowy", fontsize=16, fontweight="bold", pad=14)
+    axis.grid(alpha=0.4, linewidth=1.0)
+    axis.legend(loc="lower right", fontsize=11.5, frameon=True, framealpha=0.95)
     fig.tight_layout()
     fig.savefig(path, dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -209,11 +246,24 @@ def _plot_feature_importance(model: Any, path: Path) -> list[dict[str, float | s
         for index in top_indices
     ]
 
-    fig, axis = plt.subplots(figsize=(10, 7))
+    fig, axis = plt.subplots(figsize=(10.5, 7.5))
     labels = [str(item["feature"]) for item in reversed(top_features)]
     values = [float(item["importance"]) for item in reversed(top_features)]
-    axis.barh(labels, values, color="#1f77b4")
-    axis.set(title="Top 15 ważnych cech — Best Hybrid", xlabel="Ważność (wartość bezwzględna)")
+    bars = axis.barh(labels, values, color="#1f77b4", edgecolor="black", linewidth=1.0)
+    for bar, val in zip(bars, values):
+        axis.text(
+            val + max(values) * 0.012,
+            bar.get_y() + bar.get_height() / 2.0,
+            f"{val:.2f}",
+            va="center",
+            ha="left",
+            fontsize=11,
+            fontweight="bold",
+        )
+    axis.set_xlim(0, max(values) * 1.14)
+    axis.set_title("Top 15 ważnych cech — Best Hybrid", fontsize=16, fontweight="bold", pad=14)
+    axis.set_xlabel("Ważność (wartość bezwzględna wagi SVM)", fontsize=14, fontweight="bold")
+    axis.grid(axis="x", linestyle="--", alpha=0.4)
     fig.tight_layout()
     fig.savefig(path, dpi=300, bbox_inches="tight")
     plt.close(fig)

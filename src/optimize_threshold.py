@@ -39,6 +39,17 @@ from src.extract_features import (
 )
 from src.train import RANDOM_STATE
 
+plt.rcParams.update({
+    "font.size": 14,
+    "axes.titlesize": 16,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 14,
+    "axes.labelweight": "bold",
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "legend.fontsize": 12,
+})
+
 DEFAULT_BEST_MODEL_FILE = Path("models/best_hybrid.joblib")
 DEFAULT_THRESHOLD_FILE = Path("models/threshold.json")
 DEFAULT_PLOT_FILE = Path("reports/figures/threshold_tuning.png")
@@ -189,7 +200,7 @@ def plot_threshold_tuning(
     dest.parent.mkdir(parents=True, exist_ok=True)
 
     fig, (ax_top, ax_bottom) = plt.subplots(
-        2, 1, figsize=(8, 7), sharex=True, gridspec_kw={"height_ratios": [1.3, 1.0]}
+        2, 1, figsize=(9.5, 8.0), sharex=True, gridspec_kw={"height_ratios": [1.3, 1.0]}
     )
 
     thresholds = curve_df["threshold"].to_numpy()
@@ -199,66 +210,68 @@ def plot_threshold_tuning(
     fpr_vals = curve_df["fpr"].to_numpy()
 
     # Górny panel: F1, Recall, Precision vs Threshold
-    ax_top.plot(thresholds, f1_vals, label="F1-Score", color="#1f77b4", lw=2.2)
-    ax_top.plot(thresholds, recall_vals, label="Recall (TPR)", color="#2ca02c", lw=1.8, linestyle="--")
+    ax_top.plot(thresholds, f1_vals, label="F1-Score", color="#1f77b4", lw=2.8)
+    ax_top.plot(thresholds, recall_vals, label="Recall (TPR)", color="#2ca02c", lw=2.3, linestyle="--")
     ax_top.plot(
         thresholds,
         precision_vals,
         label="Precision",
         color="#9467bd",
-        lw=1.6,
+        lw=2.1,
         linestyle=":",
     )
     ax_top.axvline(
         optimal_tau,
         color="#d62728",
         linestyle="-.",
-        lw=1.8,
+        lw=2.2,
         label=(
             f"Optymalny próg τ* = {optimal_tau:.4f}\n"
             f"(F1={optimal_metrics['f1']:.4f}, Recall={optimal_metrics['recall']:.4f})"
         ),
     )
-    ax_top.scatter([optimal_tau], [optimal_metrics["f1"]], color="#d62728", s=55, zorder=5)
-    ax_top.set_ylabel("Wartość metryki (F1 / Recall / Precision)", fontsize=10)
+    ax_top.scatter([optimal_tau], [optimal_metrics["f1"]], color="#d62728", s=95, edgecolors="black", zorder=5)
+    ax_top.set_ylabel("F1 / Recall / Precision", fontsize=13, fontweight="bold")
     ax_top.set_title(
         f"Strojenie progu decyzyjnego (τ*) – {model_name}",
-        fontsize=12,
-        pad=10,
+        fontsize=15,
+        fontweight="bold",
+        pad=12,
     )
-    ax_top.legend(loc="lower left", fontsize=8.5)
-    ax_top.grid(alpha=0.3)
+    ax_top.legend(loc="lower left", fontsize=11, frameon=True, framealpha=0.95)
+    ax_top.grid(alpha=0.4, linewidth=1.0)
 
     # Dolny panel: FPR vs Threshold z zaznaczonym buforem FPR <= 0.018 i limitem DoD <= 0.020
-    ax_bottom.plot(thresholds, fpr_vals, label="False Positive Rate (FPR)", color="#ff7f0e", lw=2.0)
+    ax_bottom.plot(thresholds, fpr_vals, label="False Positive Rate (FPR)", color="#ff7f0e", lw=2.6)
     ax_bottom.axhline(
         max_fpr_buffer,
         color="#d62728",
         linestyle="--",
-        lw=1.5,
+        lw=2.0,
         label=f"Bufor walidacyjny FPR ≤ {max_fpr_buffer:.3f}",
     )
     ax_bottom.axhline(
         DOD_MAX_FPR,
         color="#7f7f7f",
         linestyle=":",
-        lw=1.5,
+        lw=2.0,
         label=f"Limit kontraktowy FPR ≤ {DOD_MAX_FPR:.3f}",
     )
-    ax_bottom.axvline(optimal_tau, color="#d62728", linestyle="-.", lw=1.8)
+    ax_bottom.axvline(optimal_tau, color="#d62728", linestyle="-.", lw=2.2)
     ax_bottom.scatter(
         [optimal_tau],
         [optimal_metrics["fpr"]],
         color="#d62728",
-        s=55,
+        s=95,
+        edgecolors="black",
         zorder=5,
         label=f"FPR(τ*) = {optimal_metrics['fpr']:.4f}",
     )
     ax_bottom.set_ylim(0.0, min(0.12, max(float(np.max(fpr_vals)) * 1.05, 0.03)))
-    ax_bottom.set_xlabel("Próg decyzyjny (τ)", fontsize=10)
-    ax_bottom.set_ylabel("False Positive Rate (FPR)", fontsize=10)
-    ax_bottom.legend(loc="upper right", fontsize=8.5)
-    ax_bottom.grid(alpha=0.3)
+    ax_bottom.set_xlabel("Próg decyzyjny (τ)", fontsize=13, fontweight="bold")
+    ax_bottom.set_ylabel("FPR", fontsize=13, fontweight="bold")
+    ax_bottom.legend(loc="upper right", fontsize=11, frameon=True, framealpha=0.95)
+    ax_bottom.grid(alpha=0.4, linewidth=1.0)
 
     fig.tight_layout()
     fig.savefig(dest, dpi=300, bbox_inches="tight")
