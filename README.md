@@ -12,12 +12,12 @@ Wykrywanie phishingowych adresów URL metodami klasycznego uczenia maszynowego (
 
 | Kryterium / Metryka | Wymóg ze zlecenia | Baseline (`MultinomialNB`, word tokens) | Best Hybrid (`LinearSVC`, char TF-IDF + 12 cech, $\tau^* = -0.088141$) | Status |
 |---|---|---|---|---|
-| **F1-Score** | $\ge 0.92$ | `0.8916` | **`0.9466`** (Precision: `0.9535`, Recall: `0.9399`) | ✅ Spełniony |
-| **False Positive Rate (FPR)** | $\le 0.02$ ($\le 2.0\%$) | `0.0181` (`1.81%`) | **`0.0133`** (**`1.33%`**, FNR: `6.01%`) | ✅ Spełniony |
-| **ROC-AUC** | $\ge 0.95$ | `0.9840` | **`0.9944`** | ✅ Spełniony |
-| **$\Delta\text{Recall}$ Red Team (5 rund Evasion)** | Analiza odporności na ataki omijające (Rundy 1–5 vs Runda 0) | R0: `83.04%`<br>Śr. $\Delta\text{Recall}$: `-9.44 p.p.`<br>Max spadek (R3): `+1.44 p.p.` | R0: **`93.76%`**<br>Śr. $\Delta\text{Recall}$: **`-1.07 p.p.`**<br>Max spadek (R2 *URL encoding*): `+6.56 p.p.` (R1, R4, R5: wzrost do `94.4%–100%`) | ✅ Spełniony |
-| **Czas inferencji (`Latency ms`)** | $\le 10.0\text{ ms / URL}$ | średnia: `0.154 ms/URL`<br>p95: `0.170 ms/URL` | średnia: **`0.472 ms/URL`**<br>p95: **`0.537 ms/URL`** | ✅ Spełniony ($\sim 20\times$ szybciej) |
-| **Czas treningu (`Train time s`)** | $\le 90.0\text{ s}$ na CPU | `1.14 s` (5-fold CV: `1.59 s`) | **`29.57 s`** na zbiorze `train.csv` ($N = 354\,494$) | ✅ Spełniony ($\sim 3\times$ szybciej) |
+| **F1-Score** | $\ge 0.92$ | `0.8916` | `0.9466` (Precision: `0.9535`, Recall: `0.9399`) | ✅ Spełniony |
+| **False Positive Rate (FPR)** | $\le 0.02$ ($\le 2.0\%$) | `0.0181` (`1.81%`) | `0.0133` (`1.33%`**, FNR: `6.01%`) | ✅ Spełniony |
+| **ROC-AUC** | $\ge 0.95$ | `0.9840` | `0.9944` | ✅ Spełniony |
+| **$\Delta\text{Recall}$ Red Team (5 rund Evasion)** | Analiza odporności na ataki omijające (Rundy 1–5 vs Runda 0) | R0: `83.04%`<br>Śr. $\Delta\text{Recall}$: `-9.44 p.p.`<br>Max spadek (R3): `+1.44 p.p.` | R0: **`93.76%`**<br>Śr. $\Delta\text{Recall}$: `-1.07 p.p.`<br>Max spadek (R2 *URL encoding*): `+6.56 p.p.` (R1, R4, R5: wzrost do `94.4%–100%`) | ✅ Spełniony |
+| **Czas inferencji (`Latency ms`)** | $\le 10.0\text{ ms / URL}$ | średnia: `0.154 ms/URL`<br>p95: `0.170 ms/URL` | średnia: `0.472 ms/URL`<br>p95: `0.537 ms/URL` | ✅ Spełniony ($\sim 20\times$ szybciej) |
+| **Czas treningu (`Train time s`)** | $\le 90.0\text{ s}$ na CPU | `1.14 s` (5-fold CV: `1.59 s`) | `29.57 s` na zbiorze `train.csv` ($N = 354\,494$) | ✅ Spełniony ($\sim 3\times$ szybciej) |
 
 ### Porównanie walidacji krzyżowej (5-fold StratifiedKFold na `train.csv`, $N = 354\,494$)
 
@@ -25,13 +25,13 @@ Wykrywanie phishingowych adresów URL metodami klasycznego uczenia maszynowego (
 |---|---|---|---|---|---|
 | **Baseline (`MultinomialNB`)** | Word-level Bag-of-Words (`max_features=20000`) | `0.8876 ± 0.0013` | `0.0185 ± 0.0005` | `0.9836 ± 0.0004` | `1.32 s` |
 | **Hybrid `ComplementNB`** | Char TF-IDF (3–5) + 12 cech leksykalnych + `MaxAbsScaler` | `0.8629 ± 0.0028` | `0.0475 ± 0.0017` | `0.9800 ± 0.0005` | `26.69 s` |
-| **Hybrid `LinearSVC`** | Char TF-IDF (3–5) + 12 cech leksykalnych + `MaxAbsScaler` | **`0.9408 ± 0.0004`** | **`0.0107 ± 0.0004`** | **`0.9935 ± 0.0003`** | `30.65 s` |
+| **Hybrid `LinearSVC`** | Char TF-IDF (3–5) + 12 cech leksykalnych + `MaxAbsScaler` | `0.9408 ± 0.0004` | `0.0107 ± 0.0004` | `0.9935 ± 0.0003` | `30.65 s` |
 
 ---
 
 ## Instrukcja uruchomienia krok po kroku
 
-Wymagania: **Python ≥ 3.10**, `git`. Wszystkie polecenia uruchamiaj w katalogu głównym repozytorium.
+Wymagania: Python ≥ 3.10, `git`. Wszystkie polecenia uruchamiaj w katalogu głównym repozytorium.
 
 ### 1. Pobranie repozytorium i środowisko wirtualne
 
@@ -104,10 +104,10 @@ Zestaw 103 testów jednostkowych i integracyjnych (w tym weryfikacja braku przec
 
 ## Zespół projektowy
 
-Wszystkie prace projektowe zostały zrealizowane przy równym wkładzie każdego członka zespołu (**po 25%**):
+Wszystkie prace projektowe zostały zrealizowane przy równym wkładzie każdego członka zespołu:
 
 - **Rafał Wodziński** (`@rafalwodzinski`) — **25%**
-- **Julita Skorżycka** (`@JulitaSkorzycka`) — **25%**
+- **Julita Skorzycka** (`@JulitaSkorzycka`) — **25%**
 - **Anna Tokarz** (`@nisee`) — **25%**
 - **Bartłomiej Piwowar** (`@BartlomiejPiwowar`) — **25%**
 
@@ -117,11 +117,11 @@ Wszystkie prace projektowe zostały zrealizowane przy równym wkładzie każdego
 
 | Katalog / Plik | Przeznaczenie |
 |---|---|
-| `src/prepare_data.py` | Pobieranie, czyszczenie, deduplikacja i stratyfikowany podział 70/15/15 (**S1**) |
-| `src/extract_features.py` | Transformator `LexicalExtractor` (12 cech) i potok `FeatureUnion` z char TF-IDF 3–5 (**S2**) |
-| `src/evaluate.py` | Zunifikowane metryki (`F1`, `Precision`, `Recall`, `FPR`, `FNR`, `ROC-AUC`) i wykresy (**S0**) |
+| `src/prepare_data.py` | Pobieranie, czyszczenie, deduplikacja i stratyfikowany podział 70/15/15 |
+| `src/extract_features.py` | Transformator `LexicalExtractor` (12 cech) i potok `FeatureUnion` z char TF-IDF 3–5 |
+| `src/evaluate.py` | Zunifikowane metryki (`F1`, `Precision`, `Recall`, `FPR`, `FNR`, `ROC-AUC`) i wykresy |
 | `src/train.py` | Trening `Baseline` (`MultinomialNB`) oraz modeli hybrydowych (`ComplementNB`, `LinearSVC`) z 5-fold CV |
-| `src/optimize_threshold.py` | Strojenie hiperparametrów na `val.csv` i dobór progu decyzyjnego $\tau^*$ dla $\text{FPR} \le 0.018$ (**S3**) |
+| `src/optimize_threshold.py` | Strojenie hiperparametrów na `val.csv` i dobór progu decyzyjnego $\tau^*$ dla $\text{FPR} \le 0.018$ |
 | `src/red_team.py` | Generator 5 rund ataków omijających (Evasion) i ewaluacja spadku czułości ($\Delta\text{Recall}$) |
 | `src/final_eval.py` | Jednokrotna ewaluacja końcowa na `test.csv` oraz benchmarki czasu treningu i inferencji |
 | `src/predict.py` | CLI do inspekcji adresów URL w czasie rzeczywistym (`ALLOW` / `QUARANTINE` / `PHISHING`) |
@@ -153,7 +153,7 @@ Wszystkie prace projektowe zostały zrealizowane przy równym wkładzie każdego
 | Wyjście klasyfikatora | `numpy.ndarray` etykiet `0`/`1` + ciągłe wyniki decyzyjne (`predict_proba` / `decision_function`) |
 | Serializacja modeli | `joblib.dump` do `models/<nazwa>.joblib` (`feature_pipeline.joblib`, `baseline_mnb.joblib`, `best_hybrid.joblib`) |
 | Ziarno losowości | `RANDOM_STATE = 42` |
-| Podział danych | Stratyfikowany `train` / `val` / `test` w proporcji **70% / 15% / 15%** (0% części wspólnej URL) |
+| Podział danych | Stratyfikowany `train` / `val` / `test` w proporcji 70% / 15% / 15% (0% części wspólnej URL) |
 | Metryki | Precision, Recall, F1, FPR, FNR, ROC-AUC |
 | Wykresy / wyniki | `reports/figures/*.png` (300 dpi), `reports/results/*.json` oraz `*.csv` |
 | Styl kodu | PEP 8, type hints, docstringi |
