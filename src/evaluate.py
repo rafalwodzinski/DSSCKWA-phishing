@@ -244,13 +244,13 @@ def plot_roc_curve(
             edgecolors="black",
             linewidths=1.2,
             zorder=5,
-            label=f"Próg {threshold:.2f} (FPR={thresh_fpr:.3f}, Recall={thresh_tpr:.3f})",
+            label=f"Próg {threshold:.2f} (FPR={thresh_fpr:.3f}, Czułość={thresh_tpr:.3f})",
         )
 
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.05])
-    ax.set_xlabel("False Positive Rate (FPR)", fontsize=14, fontweight="bold")
-    ax.set_ylabel("True Positive Rate (Recall / TPR)", fontsize=14, fontweight="bold")
+    ax.set_xlabel("Odsetek fałszywych alarmów (FPR)", fontsize=14, fontweight="bold")
+    ax.set_ylabel("Czułość (TPR)", fontsize=14, fontweight="bold")
     ax.set_title(f"Krzywa ROC – {model_name}", fontsize=16, fontweight="bold", pad=14)
     ax.legend(loc="lower right", fontsize=12, frameon=True, framealpha=0.95)
     ax.grid(alpha=0.4, linewidth=1.0)

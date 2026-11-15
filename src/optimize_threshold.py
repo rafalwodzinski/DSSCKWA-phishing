@@ -210,12 +210,12 @@ def plot_threshold_tuning(
     fpr_vals = curve_df["fpr"].to_numpy()
 
     # Górny panel: F1, Recall, Precision vs Threshold
-    ax_top.plot(thresholds, f1_vals, label="F1-Score", color="#1f77b4", lw=2.8)
-    ax_top.plot(thresholds, recall_vals, label="Recall (TPR)", color="#2ca02c", lw=2.3, linestyle="--")
+    ax_top.plot(thresholds, f1_vals, label="Miara F1", color="#1f77b4", lw=2.8)
+    ax_top.plot(thresholds, recall_vals, label="Czułość (TPR)", color="#2ca02c", lw=2.3, linestyle="--")
     ax_top.plot(
         thresholds,
         precision_vals,
-        label="Precision",
+        label="Precyzja",
         color="#9467bd",
         lw=2.1,
         linestyle=":",
@@ -227,13 +227,14 @@ def plot_threshold_tuning(
         lw=2.2,
         label=(
             f"Optymalny próg τ* = {optimal_tau:.4f}\n"
-            f"(F1={optimal_metrics['f1']:.4f}, Recall={optimal_metrics['recall']:.4f})"
+            f"(F1={optimal_metrics['f1']:.4f}, Czułość={optimal_metrics['recall']:.4f})"
         ),
     )
     ax_top.scatter([optimal_tau], [optimal_metrics["f1"]], color="#d62728", s=95, edgecolors="black", zorder=5)
-    ax_top.set_ylabel("F1 / Recall / Precision", fontsize=13, fontweight="bold")
+    ax_top.set_ylabel("F1 / Czułość / Precyzja", fontsize=13, fontweight="bold")
+    pl_model_name = model_name.replace("Hybrid ", "Model hybrydowy ")
     ax_top.set_title(
-        f"Strojenie progu decyzyjnego (τ*) – {model_name}",
+        f"Strojenie progu decyzyjnego (τ*) – {pl_model_name}",
         fontsize=15,
         fontweight="bold",
         pad=12,
@@ -242,7 +243,7 @@ def plot_threshold_tuning(
     ax_top.grid(alpha=0.4, linewidth=1.0)
 
     # Dolny panel: FPR vs Threshold z zaznaczonym buforem FPR <= 0.018 i limitem DoD <= 0.020
-    ax_bottom.plot(thresholds, fpr_vals, label="False Positive Rate (FPR)", color="#ff7f0e", lw=2.6)
+    ax_bottom.plot(thresholds, fpr_vals, label="Odsetek fałszywych alarmów (FPR)", color="#ff7f0e", lw=2.6)
     ax_bottom.axhline(
         max_fpr_buffer,
         color="#d62728",
@@ -269,7 +270,7 @@ def plot_threshold_tuning(
     )
     ax_bottom.set_ylim(0.0, min(0.12, max(float(np.max(fpr_vals)) * 1.05, 0.03)))
     ax_bottom.set_xlabel("Próg decyzyjny (τ)", fontsize=13, fontweight="bold")
-    ax_bottom.set_ylabel("FPR", fontsize=13, fontweight="bold")
+    ax_bottom.set_ylabel("Fałszywe alarmy (FPR)", fontsize=13, fontweight="bold")
     ax_bottom.legend(loc="upper right", fontsize=11, frameon=True, framealpha=0.95)
     ax_bottom.grid(alpha=0.4, linewidth=1.0)
 

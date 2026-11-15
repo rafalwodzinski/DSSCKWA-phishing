@@ -155,6 +155,10 @@ def _plot_confusion_matrices(
     predictions: dict[str, np.ndarray],
     path: Path,
 ) -> None:
+    pl_names = {
+        "Baseline": "Model bazowy (MultinomialNB)",
+        "Best Hybrid": "Model hybrydowy (LinearSVC)",
+    }
     fig, axes = plt.subplots(1, len(predictions), figsize=(12, 5.2))
     for axis, (name, predicted) in zip(np.atleast_1d(axes), predictions.items()):
         matrix = confusion_matrix(targets, predicted, labels=[0, 1])
@@ -166,7 +170,7 @@ def _plot_confusion_matrices(
             xticklabels=["Legalny (0)", "Phishing (1)"],
             yticklabels=["Legalny (0)", "Phishing (1)"],
         )
-        axis.set_title(name, fontsize=16, fontweight="bold", pad=12)
+        axis.set_title(pl_names.get(name, name), fontsize=15, fontweight="bold", pad=12)
         axis.set_xlabel("Predykcja", fontsize=14, fontweight="bold")
         axis.set_ylabel("Rzeczywistość", fontsize=14, fontweight="bold")
         thresh_color = matrix.max() / 2.0
@@ -195,18 +199,23 @@ def _plot_roc_curves(
     thresholds: dict[str, float],
     path: Path,
 ) -> None:
+    pl_names = {
+        "Baseline": "Model bazowy",
+        "Best Hybrid": "Model hybrydowy",
+    }
     fig, axis = plt.subplots(figsize=(8.2, 6.5))
     colors = {"Baseline": "#2b5c8f", "Best Hybrid": "#d95f02"}
     for name, values in scores.items():
         false_positive_rate, true_positive_rate, _ = roc_curve(targets, values)
         auc = roc_auc_score(targets, values)
         color = colors.get(name, None)
+        disp_name = pl_names.get(name, name)
         axis.plot(
             false_positive_rate,
             true_positive_rate,
             lw=3.0,
             color=color,
-            label=f"{name} (AUC = {auc:.4f})",
+            label=f"{disp_name} (AUC = {auc:.4f})",
         )
 
         threshold = thresholds[name]
@@ -222,14 +231,14 @@ def _plot_roc_curves(
             edgecolors="black",
             linewidths=1.3,
             zorder=5,
-            label=f"{name}, próg = {threshold:.4g} (FPR={fpr:.3f}, TPR={tpr:.3f})",
+            label=f"{disp_name}, próg = {threshold:.4g} (FPR={fpr:.3f}, Czułość={tpr:.3f})",
         )
 
     axis.plot([0, 1], [0, 1], linestyle="--", lw=2.0, color="gray", label="Losowy (AUC = 0.5000)")
     axis.set_xlim(0, 1)
     axis.set_ylim(0, 1.05)
-    axis.set_xlabel("False Positive Rate (FPR)", fontsize=14, fontweight="bold")
-    axis.set_ylabel("True Positive Rate (Recall / TPR)", fontsize=14, fontweight="bold")
+    axis.set_xlabel("Odsetek fałszywych alarmów (FPR)", fontsize=14, fontweight="bold")
+    axis.set_ylabel("Czułość (TPR)", fontsize=14, fontweight="bold")
     axis.set_title("Krzywe ROC — zbiór testowy", fontsize=16, fontweight="bold", pad=14)
     axis.grid(alpha=0.4, linewidth=1.0)
     axis.legend(loc="lower right", fontsize=11.5, frameon=True, framealpha=0.95)
@@ -246,8 +255,30 @@ def _plot_feature_importance(model: Any, path: Path) -> list[dict[str, float | s
         for index in top_indices
     ]
 
-    fig, axis = plt.subplots(figsize=(10.5, 7.5))
-    labels = [str(item["feature"]) for item in reversed(top_features)]
+    pl_feature_map = {
+        "lexical__url_length": "Cecha: Długość URL",
+        "lexical__host_length": "Cecha: Długość hosta",
+        "lexical__path_length": "Cecha: Długość ścieżki",
+        "lexical__num_dots": "Cecha: Liczba kropek",
+        "lexical__has_at": "Cecha: Obecność znaku @",
+        "lexical__shannon_entropy": "Cecha: Entropia Shannona",
+        "lexical__num_hyphens": "Cecha: Liczba myślników",
+        "lexical__digit_ratio": "Cecha: Udział cyfr",
+        "lexical__num_subdomains": "Cecha: Liczba subdomen",
+        "lexical__num_query_params": "Cecha: Parametry zapytania",
+        "lexical__has_ip": "Cecha: Adres IPv4 w hoście",
+        "lexical__num_percent_encoded": "Cecha: Kodowanie %xx",
+    }
+
+    def _format_feature_label(raw_name: str) -> str:
+        if raw_name in pl_feature_map:
+            return pl_feature_map[raw_name]
+        if raw_name.startswith("tfidf__"):
+            return f"n-gram: '{raw_name[len('tfidf__'):]}'"
+        return raw_name
+
+    fig, axis = plt.subplots(figsize=(10.8, 7.6))
+    labels = [_format_feature_label(str(item["feature"])) for item in reversed(top_features)]
     values = [float(item["importance"]) for item in reversed(top_features)]
     bars = axis.barh(labels, values, color="#1f77b4", edgecolor="black", linewidth=1.0)
     for bar, val in zip(bars, values):
@@ -260,9 +291,9 @@ def _plot_feature_importance(model: Any, path: Path) -> list[dict[str, float | s
             fontsize=11,
             fontweight="bold",
         )
-    axis.set_xlim(0, max(values) * 1.14)
-    axis.set_title("Top 15 ważnych cech — Best Hybrid", fontsize=16, fontweight="bold", pad=14)
-    axis.set_xlabel("Ważność (wartość bezwzględna wagi SVM)", fontsize=14, fontweight="bold")
+    axis.set_xlim(0, max(values) * 1.15)
+    axis.set_title("15 najważniejszych cech — Model hybrydowy (LinearSVC)", fontsize=15, fontweight="bold", pad=14)
+    axis.set_xlabel("Ważność cechy (wartość bezwzględna wagi SVM)", fontsize=14, fontweight="bold")
     axis.grid(axis="x", linestyle="--", alpha=0.4)
     fig.tight_layout()
     fig.savefig(path, dpi=300, bbox_inches="tight")

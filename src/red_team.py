@@ -571,7 +571,13 @@ def export_red_team_results(
     models = sorted(result["Model"].unique())
     x_positions = np.arange(len(ROUND_ORDER))
     bar_width = 0.76 / max(len(models), 1)
-    colors = {"Baseline": "#2b5c8f", "Hybrid": "#d95f02"}
+    colors = {"Baseline": "#2b5c8f", "Hybrid": "#d95f02", "baseline": "#2b5c8f", "hybrid": "#d95f02"}
+    pl_model_labels = {
+        "Baseline": "Model bazowy (MultinomialNB)",
+        "Hybrid": "Model hybrydowy (LinearSVC)",
+        "baseline": "Model bazowy",
+        "hybrid": "Model hybrydowy",
+    }
 
     for index, model_name in enumerate(models):
         model_rows = result[result["Model"] == model_name].set_index("Round").loc[ROUND_ORDER]
@@ -581,7 +587,7 @@ def export_red_team_results(
             offsets,
             deltas,
             width=bar_width,
-            label=model_name,
+            label=pl_model_labels.get(model_name, model_name),
             color=colors.get(model_name, None),
             edgecolor="black",
             linewidth=1.3,
@@ -599,9 +605,9 @@ def export_red_team_results(
             )
 
     ax.axhline(0.0, color="black", linewidth=1.4)
-    ax.set_title("Spadek Recall w rundach obfuskacji URL", fontsize=16, fontweight="bold", pad=14)
-    ax.set_xlabel("Runda", fontsize=14, fontweight="bold")
-    ax.set_ylabel("Δ Recall (p.p.)", fontsize=14, fontweight="bold")
+    ax.set_title("Zmiana czułości (Δ Czułość) w rundach zaciemniania składni URL", fontsize=16, fontweight="bold", pad=14)
+    ax.set_xlabel("Runda testów odpornościowych", fontsize=14, fontweight="bold")
+    ax.set_ylabel("Δ Czułość [p.p.] (+ spadek / - wzrost)", fontsize=14, fontweight="bold")
     ax.set_xticks(x_positions)
     ax.set_xticklabels(ROUND_ORDER, rotation=0, fontsize=12, fontweight="bold")
     min_delta = float(result["Delta_Recall_pp"].min()) if not result.empty else -10.0
