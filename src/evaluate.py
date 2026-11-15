@@ -247,8 +247,8 @@ def plot_roc_curve(
             label=f"Próg {threshold:.2f} (FPR={thresh_fpr:.3f}, Czułość={thresh_tpr:.3f})",
         )
 
-    ax.set_xlim([0.0, 1.0])
-    ax.set_ylim([0.0, 1.05])
+    ax.set_xlim([-0.03, 1.02])
+    ax.set_ylim([-0.02, 1.05])
     ax.set_xlabel("Odsetek fałszywych alarmów (FPR)", fontsize=14, fontweight="bold")
     ax.set_ylabel("Czułość (TPR)", fontsize=14, fontweight="bold")
     ax.set_title(f"Krzywa ROC – {model_name}", fontsize=16, fontweight="bold", pad=14)

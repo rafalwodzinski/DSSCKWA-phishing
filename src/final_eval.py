@@ -235,8 +235,8 @@ def _plot_roc_curves(
         )
 
     axis.plot([0, 1], [0, 1], linestyle="--", lw=2.0, color="gray", label="Losowy (AUC = 0.5000)")
-    axis.set_xlim(0, 1)
-    axis.set_ylim(0, 1.05)
+    axis.set_xlim(-0.03, 1.02)
+    axis.set_ylim(-0.02, 1.05)
     axis.set_xlabel("Odsetek fałszywych alarmów (FPR)", fontsize=14, fontweight="bold")
     axis.set_ylabel("Czułość (TPR)", fontsize=14, fontweight="bold")
     axis.set_title("Krzywe ROC — zbiór testowy", fontsize=16, fontweight="bold", pad=14)
