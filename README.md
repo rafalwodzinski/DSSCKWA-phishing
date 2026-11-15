@@ -102,44 +102,14 @@ Zestaw 103 testów jednostkowych i integracyjnych (w tym weryfikacja braku przec
 
 ---
 
-## Contribution Matrix (Wkład zespołu)
+## Zespół projektowy
 
-Zespół pracował zgodnie z zasadami opisanymi w [CONTRIBUTING.md](CONTRIBUTING.md) (feature branches od `develop`, Conventional Commits, obowiązkowe Code Review i Pull Requesty powiązane z Issues). Wszystkie zadania zostały zrealizowane przy równym wkładzie pracy (**25% każdy członek zespołu**).
+Wszystkie prace projektowe zostały zrealizowane przy równym wkładzie każdego członka zespołu (**po 25%**):
 
-| Członek zespołu | Konto GitHub / Git | Udział | Główne obszary odpowiedzialności i zrealizowane zadania | Zmergowane Pull Requesty (PR) |
-|---|---|---|---|---|
-| **Rafał Wodziński** | `@rafalwodzinski` (`Rafał Wodziński`) | **25%** | Inicjalizacja repozytorium i CI/CD, budowa hybrydowego potoku cech `FeatureUnion` (**S2**), trening modelu `Baseline` (`MultinomialNB`) oraz modeli hybrydowych (`ComplementNB`, `LinearSVC`) z 5-fold CV, strojenie hiperparametrów i optymalizacja progu decyzyjnego $\tau^*$ (**S3**), analiza anomalii Red Teaming i finalizacja dokumentacji. | `#22`, `#24`, `#26`, `#28`, `#33`, `#34` |
-| **Julita Skorżycka** | `@JulitaSkorzycka` (`JulitaSkorzycka`) | **25%** | Zunifikowany moduł ewaluacji metryk i wizualizacji (`src/evaluate.py`, **S0**), implementacja ekstraktora 12 cech leksykalno-entropijnych `LexicalExtractor`, eksploracyjna analiza danych (`notebooks/01_eda.ipynb`), generator 5 rund ataków omijających i ewaluacja Red Team (`src/red_team.py`). | `#19`, `#21`, `#23`, `#25`, `#31` |
-| **Anna Tokarz** | `@nisee` (`nisee`, `Ania`) | **25%** | Potok pobierania, czyszczenia, deduplikacji i stratyfikowanego podziału danych `train/val/test` (`src/prepare_data.py`, **S1**), testy jednostkowe i weryfikacja braku przecieku danych (`tests/test_no_leakage.py`), interfejs CLI symulujący bramkę bezpieczeństwa ESG/SOC (`src/predict.py`: `ALLOW` / `QUARANTINE` / `PHISHING`). | `#20`, `#27`, `#29` |
-| **Bartłomiej Piwowar** | `@BartlomiejPiwowar` (`BartlomiejPiwowar`, `Bartłomiej Piwowar`) | **25%** | Współtworzenie analizy eksploracyjnej (EDA), moduł jednokrotnej ewaluacji końcowej na zbiorze testowym (`src/final_eval.py`), benchmarki wydajnościowe (czas treningu $\le 90\text{ s}$ oraz latencja inferencji $\le 10\text{ ms/URL}$), generowanie finalnych wykresów macierzy pomyłek, krzywych ROC i ważności cech. | `#23` *(współautor)*, `#30` |
-
-### Wykaz zmergowanych Pull Requestów
-
-- **PR #19** – `feat(evaluate): add unified evaluation metrics and visualization module` (`@JulitaSkorzycka`)
-- **PR #20** – `Feat/3 prepare data` (`@nisee` – Anna Tokarz)
-- **PR #21** – `Feat/5 extract features` (`@JulitaSkorzycka`)
-- **PR #22** – `feat(features): add hybrid char TF-IDF and lexical pipeline (S2)` (`@rafalwodzinski`)
-- **PR #23** – `feat(eda): initial eda notebook setup` (`@JulitaSkorzycka`, `@BartlomiejPiwowar`)
-- **PR #24** – `feat(ml): add word-token MultinomialNB baseline model` (`@rafalwodzinski`)
-- **PR #25** – `Feat/12 red team` (`@JulitaSkorzycka`)
-- **PR #26** – `feat(ml): add hybrid ComplementNB and LinearSVC training with 5-fold CV` (`@rafalwodzinski`)
-- **PR #27** – `test(leakage): add data leakage verification tests (#6)` (`@nisee` – Anna Tokarz)
-- **PR #28** – `feat(ml): add hyperparameter tuning and threshold optimization for S3` (`@rafalwodzinski`)
-- **PR #29** – `feat(predict): add URL inspection CLI for ESG/SOC proxy simulation` (`@nisee` – Anna Tokarz)
-- **PR #30** – `feat(eval): jednokrotna ewaluacja na zbiorze testowym i benchmark (≤ 10 ms/URL, ≤ 90 s)` (`@BartlomiejPiwowar`)
-- **PR #31** – `Fix red-team evaluation and document issue mismatch` (`@JulitaSkorzycka`, `@BartlomiejPiwowar`)
-- **PR #33** – `fix(red-team): apply per-model decision thresholds and analyze evasion anomalies` (`@rafalwodzinski`)
-
-### Podsumowanie `git shortlog -sn` (gałąź `develop` po squash-merge PR-ów)
-
-```text
-    10  Rafał Wodziński
-     5  JulitaSkorzycka
-     3  nisee
-     1  BartlomiejPiwowar
-```
-
-*(Uwaga: Z uwagi na scalanie gałęzi zadaniowych metodą **Squash and merge** na GitHubie, każdy zmergowany PR odpowiada pojedynczemu commitowi w historii głównej gałęzi `develop`).*
+- **Rafał Wodziński** (`@rafalwodzinski`) — **25%**
+- **Julita Skorżycka** (`@JulitaSkorzycka`) — **25%**
+- **Anna Tokarz** (`@nisee`) — **25%**
+- **Bartłomiej Piwowar** (`@BartlomiejPiwowar`) — **25%**
 
 ---
 
