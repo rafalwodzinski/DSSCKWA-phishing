@@ -1,0 +1,383 @@
+{
+  "best_model": {
+    "threshold": -0.088141,
+    "optimal_threshold": -0.088141,
+    "default_threshold": 0.0,
+    "score_method": "decision_function",
+    "model_family": "LinearSVC",
+    "model_key": "svm",
+    "hyperparameters": {
+      "C": 1.0,
+      "max_features": 30000
+    },
+    "max_fpr_buffer": 0.018,
+    "dod_max_fpr_limit": 0.02,
+    "val_metrics_at_optimal_threshold": {
+      "f1": 0.945112,
+      "precision": 0.955866,
+      "recall": 0.934598,
+      "fpr": 0.012472,
+      "fnr": 0.065402,
+      "roc_auc": 0.994399
+    },
+    "val_metrics_at_default_threshold": {
+      "f1": 0.944051,
+      "precision": 0.964704,
+      "recall": 0.924265,
+      "fpr": 0.009774,
+      "fnr": 0.075735,
+      "roc_auc": 0.994399
+    },
+    "test_set_used": false
+  },
+  "candidates": [
+    {
+      "model_family": "ComplementNB",
+      "model_key": "cnb",
+      "max_features": 20000,
+      "hyperparameters": {
+        "alpha": 0.1,
+        "max_features": 20000
+      },
+      "score_method": "predict_proba",
+      "default_threshold": 0.5,
+      "default_val_metrics": {
+        "f1": 0.8532572679862852,
+        "precision": 0.837784315944325,
+        "recall": 0.8693125110080432,
+        "fpr": 0.04865011623763384,
+        "fnr": 0.13068748899195679,
+        "roc_auc": 0.9769971274634123
+      },
+      "optimal_threshold": 0.839357429718898,
+      "tuned_val_metrics": {
+        "f1": 0.8461906737735789,
+        "precision": 0.92712267449993,
+        "recall": 0.7782539775729467,
+        "fpr": 0.01768169554224432,
+        "fnr": 0.22174602242705338,
+        "roc_auc": 0.9769971274634123
+      },
+      "fit_time_sec": 27.375
+    },
+    {
+      "model_family": "ComplementNB",
+      "model_key": "cnb",
+      "max_features": 20000,
+      "hyperparameters": {
+        "alpha": 0.5,
+        "max_features": 20000
+      },
+      "score_method": "predict_proba",
+      "default_threshold": 0.5,
+      "default_val_metrics": {
+        "f1": 0.8527550903025423,
+        "precision": 0.8357855572467444,
+        "recall": 0.8704279927200141,
+        "fpr": 0.04943069012913407,
+        "fnr": 0.1295720072799859,
+        "roc_auc": 0.9767519282867864
+      },
+      "optimal_threshold": 0.8393574297191709,
+      "tuned_val_metrics": {
+        "f1": 0.8461047254150702,
+        "precision": 0.9274165325120739,
+        "recall": 0.777901720190219,
+        "fpr": 0.017596850554037775,
+        "fnr": 0.222098279809781,
+        "roc_auc": 0.9767519282867864
+      },
+      "fit_time_sec": 27.371
+    },
+    {
+      "model_family": "ComplementNB",
+      "model_key": "cnb",
+      "max_features": 20000,
+      "hyperparameters": {
+        "alpha": 1.0,
+        "max_features": 20000
+      },
+      "score_method": "predict_proba",
+      "default_threshold": 0.5,
+      "default_val_metrics": {
+        "f1": 0.8521229868228404,
+        "precision": 0.8337640449438202,
+        "recall": 0.8713086361768332,
+        "fpr": 0.0502112640206343,
+        "fnr": 0.1286913638231668,
+        "roc_auc": 0.9765277229272976
+      },
+      "optimal_threshold": 0.8353413654633144,
+      "tuned_val_metrics": {
+        "f1": 0.8460164572303375,
+        "precision": 0.9261224774806228,
+        "recall": 0.7786649445194622,
+        "fpr": 0.01795319950450527,
+        "fnr": 0.22133505548053778,
+        "roc_auc": 0.9765277229272976
+      },
+      "fit_time_sec": 27.371
+    },
+    {
+      "model_family": "LinearSVC",
+      "model_key": "svm",
+      "max_features": 20000,
+      "hyperparameters": {
+        "C": 0.5,
+        "max_features": 20000
+      },
+      "score_method": "decision_function",
+      "default_threshold": 0.0,
+      "default_val_metrics": {
+        "f1": 0.9383103177953326,
+        "precision": 0.9644827372466374,
+        "recall": 0.9135208125403628,
+        "fpr": 0.009723235648470245,
+        "fnr": 0.08647918745963717,
+        "roc_auc": 0.9933863767549069
+      },
+      "optimal_threshold": -0.11694870365323906,
+      "tuned_val_metrics": {
+        "f1": 0.939455963928688,
+        "precision": 0.9494543710277011,
+        "recall": 0.9296659425820466,
+        "fpr": 0.014304865011623763,
+        "fnr": 0.07033405741795339,
+        "roc_auc": 0.9933863767549069
+      },
+      "fit_time_sec": 30.974
+    },
+    {
+      "model_family": "LinearSVC",
+      "model_key": "svm",
+      "max_features": 20000,
+      "hyperparameters": {
+        "C": 1.0,
+        "max_features": 20000
+      },
+      "score_method": "decision_function",
+      "default_threshold": 0.0,
+      "default_val_metrics": {
+        "f1": 0.9398775951038042,
+        "precision": 0.9610405546352537,
+        "recall": 0.9196266071743087,
+        "fpr": 0.010775313502231423,
+        "fnr": 0.08037339282569131,
+        "roc_auc": 0.9935242208451811
+      },
+      "optimal_threshold": -0.041497041129932466,
+      "tuned_val_metrics": {
+        "f1": 0.9403439627373701,
+        "precision": 0.9567409927699131,
+        "recall": 0.9244995009687078,
+        "fpr": 0.012081926320612241,
+        "fnr": 0.0755004990312922,
+        "roc_auc": 0.9935242208451811
+      },
+      "fit_time_sec": 31.545
+    },
+    {
+      "model_family": "LinearSVC",
+      "model_key": "svm",
+      "max_features": 20000,
+      "hyperparameters": {
+        "C": 2.0,
+        "max_features": 20000
+      },
+      "score_method": "decision_function",
+      "default_threshold": 0.0,
+      "default_val_metrics": {
+        "f1": 0.9402026118399426,
+        "precision": 0.9574558734023129,
+        "recall": 0.9235601479481007,
+        "fpr": 0.011861329351275221,
+        "fnr": 0.07643985205189925,
+        "roc_auc": 0.9934426126486929
+      },
+      "optimal_threshold": -0.009118062383290049,
+      "tuned_val_metrics": {
+        "f1": 0.9402036003224169,
+        "precision": 0.9564504373177842,
+        "recall": 0.9244995009687078,
+        "fpr": 0.012166771308818788,
+        "fnr": 0.0755004990312922,
+        "roc_auc": 0.9934426126486929
+      },
+      "fit_time_sec": 32.456
+    },
+    {
+      "model_family": "ComplementNB",
+      "model_key": "cnb",
+      "max_features": 30000,
+      "hyperparameters": {
+        "alpha": 0.1,
+        "max_features": 30000
+      },
+      "score_method": "predict_proba",
+      "default_threshold": 0.5,
+      "default_val_metrics": {
+        "f1": 0.8648306426084204,
+        "precision": 0.848159855497855,
+        "recall": 0.8821699054776023,
+        "fpr": 0.04564660365512209,
+        "fnr": 0.1178300945223977,
+        "roc_auc": 0.9806659526709939
+      },
+      "optimal_threshold": 0.8353413654618699,
+      "tuned_val_metrics": {
+        "f1": 0.8600738613048831,
+        "precision": 0.9300928454396504,
+        "recall": 0.7998590970469089,
+        "fpr": 0.01737625358470075,
+        "fnr": 0.20014090295309106,
+        "roc_auc": 0.9806659526709939
+      },
+      "fit_time_sec": 26.29
+    },
+    {
+      "model_family": "ComplementNB",
+      "model_key": "cnb",
+      "max_features": 30000,
+      "hyperparameters": {
+        "alpha": 0.5,
+        "max_features": 30000
+      },
+      "score_method": "predict_proba",
+      "default_threshold": 0.5,
+      "default_val_metrics": {
+        "f1": 0.8638203795687501,
+        "precision": 0.8453023151269948,
+        "recall": 0.8831679680619973,
+        "fpr": 0.04671565050652458,
+        "fnr": 0.1168320319380027,
+        "roc_auc": 0.9803228198728606
+      },
+      "optimal_threshold": 0.8313253012052035,
+      "tuned_val_metrics": {
+        "f1": 0.8595291373822056,
+        "precision": 0.9278715296679368,
+        "recall": 0.8005636118123642,
+        "fpr": 0.01798713749978789,
+        "fnr": 0.19943638818763576,
+        "roc_auc": 0.9803228198728606
+      },
+      "fit_time_sec": 26.289
+    },
+    {
+      "model_family": "ComplementNB",
+      "model_key": "cnb",
+      "max_features": 30000,
+      "hyperparameters": {
+        "alpha": 1.0,
+        "max_features": 30000
+      },
+      "score_method": "predict_proba",
+      "default_threshold": 0.5,
+      "default_val_metrics": {
+        "f1": 0.8628012954630134,
+        "precision": 0.842871542165976,
+        "recall": 0.8836963541360888,
+        "fpr": 0.047615007381513974,
+        "fnr": 0.11630364586391123,
+        "roc_auc": 0.9800308670380826
+      },
+      "optimal_threshold": 0.8313253012068942,
+      "tuned_val_metrics": {
+        "f1": 0.8587289071124429,
+        "precision": 0.9278217011995638,
+        "recall": 0.7992132918452416,
+        "fpr": 0.01797016850214658,
+        "fnr": 0.2007867081547584,
+        "roc_auc": 0.9800308670380826
+      },
+      "fit_time_sec": 26.289
+    },
+    {
+      "model_family": "LinearSVC",
+      "model_key": "svm",
+      "max_features": 30000,
+      "hyperparameters": {
+        "C": 0.5,
+        "max_features": 30000
+      },
+      "score_method": "decision_function",
+      "default_threshold": 0.0,
+      "default_val_metrics": {
+        "f1": 0.9426402361872628,
+        "precision": 0.9680712827176536,
+        "recall": 0.9185111254623378,
+        "fpr": 0.008756002782915613,
+        "fnr": 0.08148887453766218,
+        "roc_auc": 0.9942789332789363
+      },
+      "optimal_threshold": -0.0806511594647521,
+      "tuned_val_metrics": {
+        "f1": 0.944830258412566,
+        "precision": 0.9595592686765952,
+        "recall": 0.9305465860388658,
+        "fpr": 0.01133529042439463,
+        "fnr": 0.06945341396113427,
+        "roc_auc": 0.9942789332789363
+      },
+      "fit_time_sec": 30.124
+    },
+    {
+      "model_family": "LinearSVC",
+      "model_key": "svm",
+      "max_features": 30000,
+      "hyperparameters": {
+        "C": 1.0,
+        "max_features": 30000
+      },
+      "score_method": "decision_function",
+      "default_threshold": 0.0,
+      "default_val_metrics": {
+        "f1": 0.9440513312544975,
+        "precision": 0.9647037195906611,
+        "recall": 0.924264662713556,
+        "fpr": 0.009774142641394173,
+        "fnr": 0.07573533728644397,
+        "roc_auc": 0.9943985361699614
+      },
+      "optimal_threshold": -0.08814082709089366,
+      "tuned_val_metrics": {
+        "f1": 0.9451123578828629,
+        "precision": 0.9558664585084664,
+        "recall": 0.9345975459402337,
+        "fpr": 0.012472213266362355,
+        "fnr": 0.06540245405976633,
+        "roc_auc": 0.9943985361699614
+      },
+      "fit_time_sec": 30.907
+    },
+    {
+      "model_family": "LinearSVC",
+      "model_key": "svm",
+      "max_features": 30000,
+      "hyperparameters": {
+        "C": 2.0,
+        "max_features": 30000
+      },
+      "score_method": "decision_function",
+      "default_threshold": 0.0,
+      "default_val_metrics": {
+        "f1": 0.9445008662405162,
+        "precision": 0.9613864396473092,
+        "recall": 0.928198203487348,
+        "fpr": 0.010775313502231423,
+        "fnr": 0.07180179651265191,
+        "roc_auc": 0.9942783375259516
+      },
+      "optimal_threshold": 0.003355775865953703,
+      "tuned_val_metrics": {
+        "f1": 0.9445158206101169,
+        "precision": 0.9616695059625213,
+        "recall": 0.9279633652321964,
+        "fpr": 0.010690468514024876,
+        "fnr": 0.07203663476780367,
+        "roc_auc": 0.9942783375259516
+      },
+      "fit_time_sec": 31.195
+    }
+  ]
+}
